@@ -1,47 +1,38 @@
 import { ContractFactory } from "ethers";
 import * as fs from "fs";
 import { task } from "hardhat/config";
-import { hrtime } from "process";
 
-import BB_LOCALHOST from "../deployments/BB-localhost.json";
-import BB_POLYGON from "../deployments/BB-polygon-mainnet.json";
-import BB_MUMBAI from "../deployments/BB-polygon-mumbai.json";
 import treasuryLocalhost from "../deployments/BB-treasury-localhost.json";
 import treasuryMumbai from "../deployments/BB-treasury-mumbai.json";
 import treasuryPolygon from "../deployments/BB-treasury-polygon.json";
 import erc20sLocalhost from "../deployments/erc20s-localhost.json";
 import erc20sMumbai from "../deployments/erc20s-mumbai.json";
 import erc20sPolygon from "../deployments/erc20s-polygon.json";
-import { BBProfiles } from "../types/contracts/BBProfiles";
-import { BBSubscriptions } from "../types/contracts/BBSubscriptions";
-import { BBTiers } from "../types/contracts/BBTiers";
+
 
 type Contracts = "BBProfiles" | "BBTiers" | "BBPosts" | "BBSubscriptionsFactory" | "BBSubscriptions";
 
 task("deploy", "Deploy contracts and verify").setAction(async (_, { ethers }) => {
   const [admin] = await ethers.getSigners();
-  let addresses, erc20s, treasury;
+  let erc20s, treasury;
 
   if (hre.network.name == "polygon-mainnet") {
-    addresses = BB_POLYGON;
     erc20s = erc20sPolygon;
     treasury = treasuryPolygon;
   } else if (hre.network.name == "polygon-mumbai") {
-    addresses = BB_MUMBAI;
     erc20s = erc20sMumbai;
     treasury = treasuryMumbai;
   } else {
-    addresses = BB_LOCALHOST;
     erc20s = erc20sLocalhost;
     treasury = treasuryLocalhost;
   }
 
   const contracts: Record<Contracts, ContractFactory> = {
-    BBProfiles: await ethers.getContractFactory("BBProfiles"),
-    BBTiers: await ethers.getContractFactory("BBTiers"),
-    BBPosts: await ethers.getContractFactory("BBPosts"),
-    BBSubscriptionsFactory: await ethers.getContractFactory("BBSubscriptionsFactory"),
-    BBSubscriptions: await ethers.getContractFactory("BBSubscriptions"),
+    BBProfiles: await ethers.getContractFactory("BBProfiles", admin),
+    BBTiers: await ethers.getContractFactory("BBTiers", admin),
+    BBPosts: await ethers.getContractFactory("BBPosts", admin),
+    BBSubscriptionsFactory: await ethers.getContractFactory("BBSubscriptionsFactory", admin),
+    BBSubscriptions: await ethers.getContractFactory("BBSubscriptions", admin),
   };
 
   let deployments: Record<Contracts, string> = {
@@ -94,7 +85,6 @@ task("deploy", "Deploy contracts and verify").setAction(async (_, { ethers }) =>
 
         await hre.run("verify:verify", {
           address: instance.address,
-          contract: `contracts/${name}.sol:${name}`,
           constructorArguments: constructorArgs,
         });
       } catch ({ message }) {

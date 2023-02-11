@@ -6,6 +6,7 @@ import { resolve } from "path";
 
 import "./tasks/accounts";
 import "./tasks/deploy";
+import "./tasks/verifyContract";
 
 const dotenvConfigPath: string = process.env.DOTENV_CONFIG_PATH || "./.env";
 dotenvConfig({ path: resolve(__dirname, dotenvConfigPath) });
@@ -76,10 +77,12 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      allowUnlimitedContractSize: true,
       accounts: {
         mnemonic,
       },
       chainId: chainIds.hardhat,
+
     },
     arbitrum: getChainConfig("arbitrum-mainnet"),
     avalanche: getChainConfig("avalanche"),
@@ -95,26 +98,42 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
+    
     compilers: [
       {
       version: "0.8.17",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
+          details: {
+            yul: false
+          },
+        },
+      },
       },
       {
         version: "0.8.0",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+            details: {
+              yul: false
+            },
+          },
+     
+        },
       }
     ],
-    
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 800,
-      },
-    },
   },
+  
   typechain: {
     outDir: "types",
     target: "ethers-v5",
   },
+  
+
 };
 
 export default config;

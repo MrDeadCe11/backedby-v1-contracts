@@ -70,7 +70,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         _gasOracleOwner = msg.sender;
         _subscriptionFeeOwner = msg.sender;
     }
-
+    
     /*
         @dev Reverts if profile ID does not exist
 
@@ -179,7 +179,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     function setTreasuryOwner(address account) external override onlyTreasuryOwner {
         _treasuryOwner = account;
     }
-
+    
     /*
         @notice Set the gas price owner
 
