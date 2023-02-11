@@ -39,8 +39,8 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
     case "avalanche":
       jsonRpcUrl = "https://api.avax.network/ext/bc/C/rpc";
       break;
-    case "bsc":
-      jsonRpcUrl = "https://bsc-dataseed1.binance.org";
+    case "polygon-mainnet":
+      jsonRpcUrl = "https://rpc-mainnet.maticvigil.com/";
       break;
     default:
       jsonRpcUrl = "https://" + chain + ".infura.io/v3/" + infuraApiKey;
@@ -96,7 +96,15 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.17",
+    compilers: [
+      {
+      version: "0.8.17",
+      },
+      {
+        version: "0.8.0",
+      }
+    ],
+    
     settings: {
       optimizer: {
         enabled: true,
