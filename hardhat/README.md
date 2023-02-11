@@ -153,9 +153,9 @@ $ yarn clean
 ### Deploy
 
 Deploy the contracts to Hardhat Network:
-
+must add the treasury address to the correct deployments/BB-treasury-<"network name">.json
 ```sh
-$ yarn deploy --greeting "Bonjour, le monde!"
+$ yarn deploy
 ```
 
 ## Tips

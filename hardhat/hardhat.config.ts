@@ -29,8 +29,7 @@ const chainIds = {
   mainnet: 1,
   "optimism-mainnet": 10,
   "polygon-mainnet": 137,
-  "polygon-mumbai": 80001,
-  sepolia: 11155111,
+  "polygon-mumbai": 80001
 };
 
 function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
