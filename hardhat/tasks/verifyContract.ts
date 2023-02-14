@@ -12,6 +12,9 @@ import erc20sPolygon from "../deployments/erc20s-polygon.json";
 
 type Contracts = "BBProfiles" | "BBTiers" | "BBPosts" | "BBSubscriptionsFactory" | "BBSubscriptions";
 
+//if the verify script in the initial deploy script fails, this script will work as a backup.
+
+
 task("verifyContract", "verify").setAction(async (_, { ethers }) => {
   const [admin] = await ethers.getSigners();
   let addresses, erc20s, treasury;

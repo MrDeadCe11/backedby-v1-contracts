@@ -77,7 +77,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true,
+      // allowUnlimitedContractSize: true,
       accounts: {
         mnemonic,
       },
@@ -98,14 +98,13 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    
     compilers: [
       {
       version: "0.8.17",
       settings: {
         optimizer: {
           enabled: true,
-          runs: 200,
+          runs: 999999,
           details: {
             yul: false
           },
@@ -117,12 +116,11 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 999999,
             details: {
               yul: false
             },
           },
-     
         },
       }
     ],
