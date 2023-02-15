@@ -307,26 +307,31 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           ).to.be.revertedWith("5");
         });
       });
-      
-      describe("#setContribution", function () {
 
+      describe("#setContribution()", function () {
         it("setContribution should succeed", async function () {
           const newContribution = BigNumber.from("2");
-          await expect( bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution)).to.emit(bbSubscriptionsFactory, "EditContribution").withArgs(profileId, newContribution);
+          await expect(bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution))
+            .to.emit(bbSubscriptionsFactory, "EditContribution")
+            .withArgs(profileId, newContribution);
         });
 
         it("setContribution should revert when called by non profile owner", async function () {
           const newContribution = BigNumber.from("2");
-          await expect( bbSubscriptionsFactory.connect(signers.user2).setContribution(profileId, newContribution)).to.be.rejectedWith("1");
+          await expect(
+            bbSubscriptionsFactory.connect(signers.user2).setContribution(profileId, newContribution),
+          ).to.be.rejectedWith("1");
         });
 
         it("setContribution should revert when called with out of bounds contribution", async function () {
           const newContribution = BigNumber.from("0");
-          await expect( bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution)).to.be.rejectedWith("2");
+          await expect(
+            bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution),
+          ).to.be.rejectedWith("2");
         });
       });
 
-      describe("#isSubscriptionActve()", function () {
+      describe("#isSubscriptionActive()", function () {
         beforeEach("subscribe to a deployed subscription", async function () {
           const contribution = BigNumber.from("10");
 
@@ -379,10 +384,42 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             signers.user.address,
             "testtest",
           );
+
           await bbProfiles.createProfile(ownerContract.address, signers.user.address, "testtest");
 
           expect(await bbSubscriptionsFactory.isSubscriptionActive(newProfile, tierSetId, signers.user.address)).to.be
             .true;
+        });
+
+        it("getSubscriptionCurrency should return the correct subscription currency", async function () {
+          expect(
+            await bbSubscriptionsFactory.getSubscriptionCurrency(profileId, tierSetId, signers.user2.address),
+          ).to.eq(erc20.address);
+        });
+        
+      });
+      describe("#getDeployedSubscriptions()", function () {
+        it("should return the correct address of deployed subscriptions", async function () {
+          expect(await bbSubscriptionsFactory.getDeployedSubscriptions(erc20.address)).to.eq(deployedSubscription.address);
+        });
+        it("should revert if subscription is not deployed", async function () {
+          await expect(bbSubscriptionsFactory.getDeployedSubscriptions(signers.user.address)).to.be.reverted;
+        });
+      });
+      describe("#isSubscriptionProfileCreated()", function () {
+        beforeEach("create subscription profile", async function () {
+          const contribution = BigNumber.from("10");
+          await expect(
+            bbSubscriptionsFactory.connect(signers.user).createSubscriptionProfile(profileId, tierSetId, contribution),
+          )
+            .to.emit(bbSubscriptionsFactory, "NewSubscriptionProfile")
+            .withArgs(profileId, tierSetId, contribution);
+        });
+        it("should return true for valid profile", async function () {
+         expect(await bbSubscriptionsFactory.isSubscriptionProfileCreated(profileId)).to.be.true;
+        });
+        it("should revert with invalid profile", async function () {
+          await expect(bbSubscriptionsFactory.isSubscriptionProfileCreated(BigNumber.from("2"))).to.be.revertedWith("5");
         });
       });
     });
