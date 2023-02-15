@@ -395,7 +395,6 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         profileExists(profileId)
         returns (bool)
     {
-        console.log(_subscriptionProfiles[profileId].tierSetId);
         return _subscriptionProfiles[profileId].tierSetId > 0;
     }
 

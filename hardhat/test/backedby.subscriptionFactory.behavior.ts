@@ -5,8 +5,6 @@ import { BigNumber, Wallet } from "ethers";
 import { ethers } from "hardhat";
 
 import * as subscriptionsInterface from "../artifacts/contracts/BBSubscriptions.sol/BBSubscriptions.json";
-// import { BBErrorCodesV01 } from "./../types/contracts/BBErrorsV01.sol/BBErrorCodesV01";
-// import { BBPosts } from "./../types/contracts/BBPosts";
 import { BBProfiles } from "./../types/contracts/BBProfiles";
 import { BBSubscriptions } from "./../types/contracts/BBSubscriptions";
 import { BBSubscriptionsFactory } from "./../types/contracts/BBSubscriptionsFactory";
@@ -23,10 +21,8 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
     let erc20: DebugERC20;
     let bbProfiles: BBProfiles;
     let bbTiers: BBTiers;
-    // let bbPosts: BBPosts;
     let bbSubscriptionsFactory: BBSubscriptionsFactory;
     let deployedSubscription: BBSubscriptions;
-    // let bbErrors: BBErrorCodesV01;
     let gasOracle: DebugGasOracle;
     let profileId: BigNumber;
     let tierSetId: BigNumber;
@@ -34,16 +30,9 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
     beforeEach("Set up test", async function () {
       signers = await getDefaultSigners();
 
-      const {
-        _treasury,
-        _erc20,
-        _gasOracle,
-        _bbProfiles,
-        _bbTiers,
-        _bbPosts,
-        _bbSubscriptionsFactory,
-        _bbSubscriptions,
-      } = await loadFixture(deployBackedByFixture);
+      const { _treasury, _erc20, _gasOracle, _bbProfiles, _bbTiers, _bbSubscriptionsFactory } = await loadFixture(
+        deployBackedByFixture,
+      );
 
       bbSubscriptionsFactory = _bbSubscriptionsFactory;
       treasury = _treasury;
@@ -396,11 +385,12 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             await bbSubscriptionsFactory.getSubscriptionCurrency(profileId, tierSetId, signers.user2.address),
           ).to.eq(erc20.address);
         });
-        
       });
       describe("#getDeployedSubscriptions()", function () {
         it("should return the correct address of deployed subscriptions", async function () {
-          expect(await bbSubscriptionsFactory.getDeployedSubscriptions(erc20.address)).to.eq(deployedSubscription.address);
+          expect(await bbSubscriptionsFactory.getDeployedSubscriptions(erc20.address)).to.eq(
+            deployedSubscription.address,
+          );
         });
         it("should revert if subscription is not deployed", async function () {
           await expect(bbSubscriptionsFactory.getDeployedSubscriptions(signers.user.address)).to.be.reverted;
@@ -416,17 +406,13 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             .withArgs(profileId, tierSetId, contribution);
         });
         it("should return true for valid profile", async function () {
-         expect(await bbSubscriptionsFactory.isSubscriptionProfileCreated(profileId)).to.be.true;
+          expect(await bbSubscriptionsFactory.isSubscriptionProfileCreated(profileId)).to.be.true;
         });
         it("should revert with invalid profile", async function () {
-          await expect(bbSubscriptionsFactory.isSubscriptionProfileCreated(BigNumber.from("2"))).to.be.revertedWith("5");
+          await expect(bbSubscriptionsFactory.isSubscriptionProfileCreated(BigNumber.from("2"))).to.be.revertedWith(
+            "5",
+          );
         });
-      });
-    });
-
-    describe("another test", function () {
-      it("should be a test", async function () {
-        expect(true).to.be.true;
       });
     });
   });
