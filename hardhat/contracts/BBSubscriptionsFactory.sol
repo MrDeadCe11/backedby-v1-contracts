@@ -345,7 +345,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
         @param Profile ID
         @param Tier set ID
-        @param Contribution
+        @param Contribution 
     */
     function createSubscriptionProfile(
         uint256 profileId,

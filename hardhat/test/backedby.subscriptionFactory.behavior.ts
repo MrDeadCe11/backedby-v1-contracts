@@ -3,6 +3,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber, Wallet } from "ethers";
 import { ethers } from "hardhat";
+
 import * as subscriptionsInterface from "../artifacts/contracts/BBSubscriptions.sol/BBSubscriptions.json";
 // import { BBErrorCodesV01 } from "./../types/contracts/BBErrorsV01.sol/BBErrorCodesV01";
 // import { BBPosts } from "./../types/contracts/BBPosts";
@@ -72,14 +73,25 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             .to.emit(bbSubscriptionsFactory, "DeployedSubscription")
             .withArgs(erc20.address, subscriptionAddress);
         });
+
+        it("deploySubscriptions should revert if subscription is already deployed", async function () {
+          //get subscription address
+          const subscriptionAddress = await bbSubscriptionsFactory.callStatic.deploySubscriptions(erc20.address);
+          //check for correct deployment
+          await expect(bbSubscriptionsFactory.deploySubscriptions(erc20.address))
+            .to.emit(bbSubscriptionsFactory, "DeployedSubscription")
+            .withArgs(erc20.address, subscriptionAddress);
+          //check for reversion
+          await expect(bbSubscriptionsFactory.deploySubscriptions(erc20.address)).to.be.revertedWith("9");
+        });
       });
 
       describe("#isSubscriptionDeployed()", function () {
-        it("isSubscriptionDeployed should return false", async function () {
+        it("isSubscriptionDeployed should return false when subscription is not deployed", async function () {
           expect(await bbSubscriptionsFactory.isSubscriptionsDeployed(erc20.address)).to.be.false;
         });
 
-        it("isSubscriptionDeployed should return true", async function () {
+        it("isSubscriptionDeployed should return true when subscription is deployed", async function () {
           //deploy subscriptions
           await bbSubscriptionsFactory.deploySubscriptions(erc20.address);
           //check subscription deployment
@@ -127,7 +139,9 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             bbSubscriptionsFactory.connect(signers.user2).setTreasuryOwner(signers.user2.address),
           ).to.be.revertedWith("1");
         });
+      });
 
+      describe("#setTreasury()", function () {
         it("setTreasury should succeed", async function () {
           await expect(bbSubscriptionsFactory.connect(signers.admin).setTreasury(signers.user.address)).to.not.be
             .reverted;
@@ -157,7 +171,7 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
 
     describe("Functions", function () {
       let prepaidGas: BigNumber;
-      beforeEach("Set up test", async function () {
+      beforeEach("Set up function tests", async function () {
         //set gas oracle
         await bbSubscriptionsFactory.setGasOracle(gasOracle.address);
         //get deployed address
@@ -167,12 +181,14 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           bbSubscriptionsFactory,
           "DeployedSubscription",
         );
+
         //get deployed contract
         deployedSubscription = new ethers.Contract(
           deployedSubscriptionAddress,
           subscriptionsInterface.abi,
           signers.admin,
         ) as BBSubscriptions;
+
         //get test profile id
         profileId = await bbProfiles.callStatic.createProfile(signers.user.address, signers.user2.address, "testCid");
         // create test profile
@@ -180,11 +196,19 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           bbProfiles.connect(signers.admin).createProfile(signers.user.address, signers.user2.address, "testCid"),
         ).to.emit(bbProfiles, "NewProfile");
 
+        prepaidGas = await bbSubscriptionsFactory.connect(signers.admin).getSubscriptionFee(erc20.address);
+
         tierSetId = await bbTiers
           .connect(signers.user)
-          .callStatic.createTiers(profileId, [1, 5, 10], ["a", "b", "c"], [false, false, false], [erc20.address], [18]);
+          .callStatic.createTiers(
+            profileId,
+            [1, 5, 10],
+            ["a", "b", "c"],
+            [false, false, false],
+            [erc20.address],
+            [prepaidGas],
+          );
 
-        prepaidGas = (await bbSubscriptionsFactory.connect(signers.admin).getSubscriptionFee(erc20.address));
         //create test tier
         await expect(
           bbTiers
@@ -261,9 +285,7 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           const contribution = BigNumber.from("1000");
 
           await expect(
-            bbSubscriptionsFactory
-              .connect(signers.user)
-              .createSubscriptionProfile(profileId, tierSetId, contribution),
+            bbSubscriptionsFactory.connect(signers.user).createSubscriptionProfile(profileId, tierSetId, contribution),
           ).to.be.revertedWith("2");
         });
 
@@ -271,9 +293,7 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           const contribution = BigNumber.from("0");
 
           await expect(
-            bbSubscriptionsFactory
-              .connect(signers.user)
-              .createSubscriptionProfile(profileId, tierSetId, contribution),
+            bbSubscriptionsFactory.connect(signers.user).createSubscriptionProfile(profileId, tierSetId, contribution),
           ).to.be.revertedWith("2");
         });
 
@@ -287,8 +307,27 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           ).to.be.revertedWith("5");
         });
       });
+      
+      describe("#setContribution", function () {
+
+        it("setContribution should succeed", async function () {
+          const newContribution = BigNumber.from("2");
+          await expect( bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution)).to.emit(bbSubscriptionsFactory, "EditContribution").withArgs(profileId, newContribution);
+        });
+
+        it("setContribution should revert when called by non profile owner", async function () {
+          const newContribution = BigNumber.from("2");
+          await expect( bbSubscriptionsFactory.connect(signers.user2).setContribution(profileId, newContribution)).to.be.rejectedWith("1");
+        });
+
+        it("setContribution should revert when called with out of bounds contribution", async function () {
+          const newContribution = BigNumber.from("0");
+          await expect( bbSubscriptionsFactory.connect(signers.user).setContribution(profileId, newContribution)).to.be.rejectedWith("2");
+        });
+      });
+
       describe("#isSubscriptionActve()", function () {
-        beforeEach("setup", async function () {
+        beforeEach("subscribe to a deployed subscription", async function () {
           const contribution = BigNumber.from("10");
 
           await expect(
@@ -300,12 +339,14 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           await expect(
             await erc20.connect(signers.user2).approve(deployedSubscription.address, ethers.utils.parseEther("100")),
           ).to.not.be.reverted;
+
           await expect(
             deployedSubscription
               .connect(signers.user2)
               .subscribe(profileId, tierSetId, prepaidGas, { value: ethers.utils.parseEther(".5") }),
           ).to.not.be.reverted;
         });
+
         it("isSubscriptionActive should return true with active subscription", async function () {
           expect(await bbSubscriptionsFactory.isSubscriptionActive(profileId, tierSetId, signers.user.address)).to.be
             .true;
@@ -326,11 +367,22 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
             .false;
         });
 
-        it("isSubscriptionActive should return false with invalid profile", async function () {
-          const invalidProfileId = BigNumber.from("42");
-          await expect(
-            bbSubscriptionsFactory.isSubscriptionActive(invalidProfileId, tierSetId, signers.user.address),
-          ).to.be.revertedWith("5");
+        it("isSubscriptionActive should return true with owner as contract", async function () {
+          const ownerContractFactory = await ethers.getContractFactory("DebugProfileOwner", signers.admin);
+          const ownerContract = await ownerContractFactory.deploy();
+          // set owner
+          await ownerContract.setOwner(signers.user.address, true);
+
+          // create owner contract profile
+          const newProfile = await bbProfiles.callStatic.createProfile(
+            ownerContract.address,
+            signers.user.address,
+            "testtest",
+          );
+          await bbProfiles.createProfile(ownerContract.address, signers.user.address, "testtest");
+
+          expect(await bbSubscriptionsFactory.isSubscriptionActive(newProfile, tierSetId, signers.user.address)).to.be
+            .true;
         });
       });
     });
