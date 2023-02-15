@@ -11,21 +11,11 @@ import "./interfaces/IBBGasOracle.sol";
 import "./BBSubscriptions.sol";
 
 contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
-    event DeployedSubscription(
-        address currency,
-        address deployedAddress
-    );
+    event DeployedSubscription(address currency, address deployedAddress);
 
-    event NewSubscriptionProfile(
-        uint256 profileId,
-        uint256 tierSetId,
-        uint256 contribution
-    );
+    event NewSubscriptionProfile(uint256 profileId, uint256 tierSetId, uint256 contribution);
 
-    event EditContribution(
-        uint256 profileId,
-        uint256 contribution
-    );
+    event EditContribution(uint256 profileId, uint256 contribution);
 
     struct SubscriptionProfile {
         uint256 tierSetId;
@@ -39,12 +29,12 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
     // Subscription profile ID => Subscription profile
     mapping(uint256 => SubscriptionProfile) internal _subscriptionProfiles;
-    
+
     // ERC20 token => Deployed subscriptions contract
     mapping(address => address) internal _deployedSubscriptions;
 
     // Profile ID => Tier ID => Subscriber => ERC20 token
-    mapping(uint256 => mapping(uint256 => mapping (address => address))) internal _subscriptionCurrencies;
+    mapping(uint256 => mapping(uint256 => mapping(address => address))) internal _subscriptionCurrencies;
 
     address internal _treasury;
 
@@ -60,7 +50,11 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     IBBProfiles internal immutable _bbProfiles;
     IBBTiers internal immutable _bbTiers;
 
-    constructor(address bbProfiles, address bbTiers, address treasury) {
+    constructor(
+        address bbProfiles,
+        address bbTiers,
+        address treasury
+    ) {
         _bbProfiles = IBBProfiles(bbProfiles);
         _bbTiers = IBBTiers(bbTiers);
 
@@ -70,7 +64,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         _gasOracleOwner = msg.sender;
         _subscriptionFeeOwner = msg.sender;
     }
-    
+
     /*
         @dev Reverts if profile ID does not exist
 
@@ -99,7 +93,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         @param Profile ID
     */
     modifier onlyProfileOwner(uint256 profileId) {
-        (address profileOwner,,) = _bbProfiles.getProfile(profileId);
+        (address profileOwner, , ) = _bbProfiles.getProfile(profileId);
         require(profileOwner == msg.sender, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -107,7 +101,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     /*
         @dev Reverts if msg.sender is not treasury owner
     */
-    modifier onlyTreasuryOwner {
+    modifier onlyTreasuryOwner() {
         require(msg.sender == _treasuryOwner, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -115,7 +109,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     /*
         @dev Reverts if msg.sender is not gas oracle owner
     */
-    modifier onlyGasOracleOwner {
+    modifier onlyGasOracleOwner() {
         require(msg.sender == _gasOracleOwner, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -123,7 +117,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     /*
         @dev Reverts if msg.sender is not subscription fee owner
     */
-    modifier onlySubscriptionFeeOwner {
+    modifier onlySubscriptionFeeOwner() {
         require(msg.sender == _subscriptionFeeOwner, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -135,11 +129,16 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
         @return The ERC20 tokens subscriptions contract
     */
-    function deploySubscriptions(address currency) external override returns(address) {
+    function deploySubscriptions(address currency) external override returns (address) {
         require(_deployedSubscriptions[currency] == address(0), BBErrorCodesV01.ZERO_ADDRESS);
 
-        IBBSubscriptions subscriptions = new BBSubscriptions(address(_bbProfiles), address(_bbTiers), address(this), currency);
-        
+        IBBSubscriptions subscriptions = new BBSubscriptions(
+            address(_bbProfiles),
+            address(_bbTiers),
+            address(this),
+            currency
+        );
+
         _deployedSubscriptions[currency] = address(subscriptions);
         _subscriptionFees[currency] = 13500000;
 
@@ -179,7 +178,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     function setTreasuryOwner(address account) external override onlyTreasuryOwner {
         _treasuryOwner = account;
     }
-    
+
     /*
         @notice Set the gas price owner
 
@@ -215,7 +214,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     function getGasOracleOwner() external view returns (address) {
         return _gasOracleOwner;
     }
-    
+
     /*
         @notice Get the subscription fee owner
 
@@ -292,7 +291,7 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
     function getGracePeriod() external pure override returns (uint256) {
         return _gracePeriod;
     }
-    
+
     /*
         @notice Get the treasury contribution bounds
 
@@ -311,7 +310,12 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         @param Subscriber
         @param ERC20 token
     */
-    function setSubscriptionCurrency(uint256 profileId, uint256 tierId, address account, address currency) profileExists(profileId) external override {
+    function setSubscriptionCurrency(
+        uint256 profileId,
+        uint256 tierId,
+        address account,
+        address currency
+    ) external override profileExists(profileId) {
         // Msg.sender must be the ERC20 tokens subscriptions contract
         require(msg.sender == _deployedSubscriptions[currency], BBErrorCodesV01.NOT_OWNER);
         _subscriptionCurrencies[profileId][tierId][account] = currency;
@@ -326,7 +330,11 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
         @return ERC20 token
     */
-    function getSubscriptionCurrency(uint256 profileId, uint256 tierId, address account) external view override profileExists(profileId) returns (address) {
+    function getSubscriptionCurrency(
+        uint256 profileId,
+        uint256 tierId,
+        address account
+    ) external view override profileExists(profileId) returns (address) {
         // Subscription isn't active if subscriptions ERC20 token is the zero address, so revert
         require(_subscriptionCurrencies[profileId][tierId][account] != address(0));
         return _subscriptionCurrencies[profileId][tierId][account];
@@ -339,7 +347,11 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         @param Tier set ID
         @param Contribution
     */
-    function createSubscriptionProfile(uint256 profileId, uint256 tierSetId, uint256 contribution) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
+    function createSubscriptionProfile(
+        uint256 profileId,
+        uint256 tierSetId,
+        uint256 contribution
+    ) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
         // Subscription profile already initialized
         require(_subscriptionProfiles[profileId].tierSetId == 0, BBErrorCodesV01.SUBSCRIPTION_PROFILE_ALREADY_EXISTS);
 
@@ -358,8 +370,14 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         @return Tier set ID
         @return Treasury contribution
     */
-    function getSubscriptionProfile(uint256 profileId) external view override profileExists(profileId) returns (uint256, uint256) {
-        // If subscription profile isnt initialized, tier set ID is zero, and so this reverts
+    function getSubscriptionProfile(uint256 profileId)
+        external
+        view
+        override
+        profileExists(profileId)
+        returns (uint256, uint256)
+    {
+        // If subscription profile isnt initialized, tier set ID is zero, and so this reverts with underflow error
         return (_subscriptionProfiles[profileId].tierSetId - 1, _subscriptionProfiles[profileId].contribution);
     }
 
@@ -370,7 +388,13 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
         @return True if subscription profile is created, otherwise false
     */
-    function isSubscriptionProfileCreated(uint256 profileId) external view override profileExists(profileId) returns (bool) {
+    function isSubscriptionProfileCreated(uint256 profileId)
+        external
+        view
+        override
+        profileExists(profileId)
+        returns (bool)
+    {
         return _subscriptionProfiles[profileId].tierSetId > 0;
     }
 
@@ -380,7 +404,12 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
         @param Profile ID
         @param Treasury contribution
     */
-    function setContribution(uint256 profileId, uint256 contribution) external override profileExists(profileId) onlyProfileOwner(profileId){
+    function setContribution(uint256 profileId, uint256 contribution)
+        external
+        override
+        profileExists(profileId)
+        onlyProfileOwner(profileId)
+    {
         _setContribution(profileId, contribution);
         emit EditContribution(profileId, contribution);
     }
@@ -407,30 +436,35 @@ contract BBSubscriptionsFactory is IBBSubscriptionsFactory {
 
         @return True if the subscription is active, otherwise false
     */
-    function isSubscriptionActive(uint256 profileId, uint256 tierId, address account) external view override profileExists(profileId) returns (bool) {
-        (address profileOwner,,) = _bbProfiles.getProfile(profileId);
+    function isSubscriptionActive(
+        uint256 profileId,
+        uint256 tierId,
+        address account
+    ) external view override profileExists(profileId) returns (bool) {
+        (address profileOwner, , ) = _bbProfiles.getProfile(profileId);
 
         // Profile owner is always subscribed
-        if(profileOwner == account) {
+        if (profileOwner == account) {
             return true;
         }
 
         // If profile owner is a contract, try checking for BackedBy permissions
-        if(profileOwner.code.length > 0) {
+        if (profileOwner.code.length > 0) {
             try IBBPermissionsV01(profileOwner).canViewSubscription(account) returns (bool success) {
-                if(success)
-                    return success;
-            } catch { }
+                if (success) return success;
+            } catch {}
         }
 
         // If the subscription has no ERC20 token set, its not active
-        if(_subscriptionCurrencies[profileId][tierId][account] == address(0)) {
+        if (_subscriptionCurrencies[profileId][tierId][account] == address(0)) {
             return false;
         }
 
         // Get subscription values from deployed subscriptions contract
-        IBBSubscriptions subscriptions = IBBSubscriptions(_deployedSubscriptions[_subscriptionCurrencies[profileId][tierId][account]]);
-        (,,uint256 expiration,) = subscriptions.getSubscriptionFromProfile(profileId, tierId, account);
+        IBBSubscriptions subscriptions = IBBSubscriptions(
+            _deployedSubscriptions[_subscriptionCurrencies[profileId][tierId][account]]
+        );
+        (, , uint256 expiration, ) = subscriptions.getSubscriptionFromProfile(profileId, tierId, account);
 
         // If expiration plus grace period has elapsed, subscription is no longer active
         return block.timestamp < expiration + _gracePeriod;

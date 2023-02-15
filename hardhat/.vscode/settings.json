@@ -15,6 +15,7 @@
       "src"
     ],
   "editor.formatOnSave": true,
-  "liveServer.settings.root": "/coverage"
-  
+  "liveServer.settings.root": "/coverage",
+  "solidity.packageDefaultDependenciesContractsDirectory": "",
+  "solidity.packageDefaultDependenciesDirectory": "./node_modules",
 }

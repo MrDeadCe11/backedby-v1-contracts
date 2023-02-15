@@ -1,8 +1,6 @@
-import { BBErrorCodesV01 } from './../types/contracts/BBErrorsV01.sol/BBErrorCodesV01';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Wallet } from "ethers";
 import { ethers } from "hardhat";
-
 import { BBPosts } from "./../types/contracts/BBPosts";
 import { BBProfiles } from "./../types/contracts/BBProfiles";
 import { BBSubscriptions } from "./../types/contracts/BBSubscriptions";
@@ -21,6 +19,11 @@ export async function deployBackedByFixture() {
   //deploy test Erc20
   const ERC20Factory = await ethers.getContractFactory("DebugERC20", signers.admin);
   const _erc20: DebugERC20 = (await ERC20Factory.deploy("testToken", "TT")) as DebugERC20;
+
+    /* transfer 10 weth to signers */
+    Object.values(signers).forEach(async (signer) => {
+      await _erc20.connect(signer).mint(ethers.utils.parseEther("100"));
+    });
 
   //deploy test gas oracle
   const GasOracleFactory = await ethers.getContractFactory("DebugGasOracle", signers.admin);

@@ -2,5 +2,5 @@
 pragma solidity ^0.8.17;
 
 interface IBBGasOracle {
-    function getGasPrice() external view returns(uint256);
+    function getGasPrice() external view returns (uint256);
 }

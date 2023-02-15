@@ -5,30 +5,15 @@ import "./BBErrorsV01.sol";
 import "./interfaces/IBBProfiles.sol";
 import "./interfaces/IBBTiers.sol";
 
-contract BBTiers is IBBTiers {   
-    event NewTierSet (
-        uint256 profileId,
-        uint256 tierSetId
-    );
+contract BBTiers is IBBTiers {
+    event NewTierSet(uint256 profileId, uint256 tierSetId);
 
-    event EditTierSet (
-        uint256 profileId,
-        uint256 tierSetId
-    );
+    event EditTierSet(uint256 profileId, uint256 tierSetId);
 
-    event SupportedCurrencyAdded(
-        uint256 profileId,
-        uint256 tierSetId,
-        address currency,
-        uint256 priceMultiplier
-    );
+    event SupportedCurrencyAdded(uint256 profileId, uint256 tierSetId, address currency, uint256 priceMultiplier);
 
-    event SupportedCurrencyRemoved(
-        uint256 profileId,
-        uint256 tierSetId,
-        address currency
-    );
-    
+    event SupportedCurrencyRemoved(uint256 profileId, uint256 tierSetId, address currency);
+
     struct TierSet {
         uint256[] prices;
         string[] cids;
@@ -53,7 +38,7 @@ contract BBTiers is IBBTiers {
         @param Profile ID
     */
     modifier onlyProfileOwner(uint256 profileId) {
-        (address profileOwner,,) = _bbProfiles.getProfile(profileId);
+        (address profileOwner, , ) = _bbProfiles.getProfile(profileId);
         require(profileOwner == msg.sender, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -87,7 +72,11 @@ contract BBTiers is IBBTiers {
         @param Tier set ID
         @param Tier ID
     */
-    modifier tierExists(uint256 profileId, uint256 tierSetId, uint256 tierId) {
+    modifier tierExists(
+        uint256 profileId,
+        uint256 tierSetId,
+        uint256 tierId
+    ) {
         require(profileId < _bbProfiles.totalProfiles(), BBErrorCodesV01.PROFILE_NOT_EXIST);
         require(tierSetId < _totalTierSets[profileId], BBErrorCodesV01.TIER_SET_NOT_EXIST);
         require(tierId < _tierSets[profileId][tierSetId].prices.length, BBErrorCodesV01.TIER_NOT_EXIST);
@@ -106,15 +95,22 @@ contract BBTiers is IBBTiers {
 
         @return Instantiated tier set ID
     */
-    function createTiers(uint256 profileId, uint256[] calldata prices, string[] calldata cids, bool[] memory deprecated, address[] calldata supportedCurrencies, uint256[] calldata priceMultipliers) external profileExists(profileId) onlyProfileOwner(profileId) returns(uint256 tierSetId) {
+    function createTiers(
+        uint256 profileId,
+        uint256[] calldata prices,
+        string[] calldata cids,
+        bool[] memory deprecated,
+        address[] calldata supportedCurrencies,
+        uint256[] calldata priceMultipliers
+    ) external profileExists(profileId) onlyProfileOwner(profileId) returns (uint256 tierSetId) {
         tierSetId = _totalTierSets[profileId];
 
         // Increment profiles total tier sets
         _totalTierSets[profileId]++;
-        
+
         _setTiers(profileId, tierSetId, prices, cids, deprecated);
         _setSupportedCurrencies(profileId, tierSetId, supportedCurrencies, priceMultipliers);
-    
+
         emit NewTierSet(profileId, tierSetId);
     }
 
@@ -127,9 +123,15 @@ contract BBTiers is IBBTiers {
         @param Tier set CIDs
         @param Deprecated tiers 
     */
-    function editTiers(uint256 profileId, uint256 tierSetId, uint256[] calldata prices, string[] calldata cids, bool[] memory deprecated) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
+    function editTiers(
+        uint256 profileId,
+        uint256 tierSetId,
+        uint256[] calldata prices,
+        string[] calldata cids,
+        bool[] memory deprecated
+    ) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
         _setTiers(profileId, tierSetId, prices, cids, deprecated);
-        
+
         emit EditTierSet(profileId, tierSetId);
     }
 
@@ -142,11 +144,17 @@ contract BBTiers is IBBTiers {
         @param Tier set CIDs
         @param Deprecated tiers 
     */
-    function _setTiers(uint256 profileId, uint256 tierSetId, uint256[] memory prices, string[] memory cids, bool[] memory deprecated) internal {
+    function _setTiers(
+        uint256 profileId,
+        uint256 tierSetId,
+        uint256[] memory prices,
+        string[] memory cids,
+        bool[] memory deprecated
+    ) internal {
         require(prices.length == cids.length && prices.length == deprecated.length, BBErrorCodesV01.INVALID_LENGTH);
 
         // Check tier prices are greater than zero
-        for(uint256 i; i < prices.length; i++) {
+        for (uint256 i; i < prices.length; i++) {
             require(prices[i] > 0, BBErrorCodesV01.INVALID_PRICE);
         }
 
@@ -163,7 +171,12 @@ contract BBTiers is IBBTiers {
         @param Supported ERC20 tokens
         @param Supported tokens multipliers
     */
-    function setSupportedCurrencies(uint256 profileId, uint256 tierSetId, address[] calldata supportedCurrencies, uint256[] calldata priceMultipliers) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
+    function setSupportedCurrencies(
+        uint256 profileId,
+        uint256 tierSetId,
+        address[] calldata supportedCurrencies,
+        uint256[] calldata priceMultipliers
+    ) external override tierSetExists(profileId, tierSetId) onlyProfileOwner(profileId) {
         _setSupportedCurrencies(profileId, tierSetId, supportedCurrencies, priceMultipliers);
     }
 
@@ -175,14 +188,19 @@ contract BBTiers is IBBTiers {
         @param Supported ERC20 tokens
         @param Supported tokens multipliers
     */
-    function _setSupportedCurrencies(uint256 profileId, uint256 tierSetId, address[] memory supportedCurrencies, uint256[] memory priceMultipliers) internal {
+    function _setSupportedCurrencies(
+        uint256 profileId,
+        uint256 tierSetId,
+        address[] memory supportedCurrencies,
+        uint256[] memory priceMultipliers
+    ) internal {
         require(supportedCurrencies.length == priceMultipliers.length, BBErrorCodesV01.INVALID_LENGTH);
 
-        for(uint256 i; i < priceMultipliers.length; i++) {
+        for (uint256 i; i < priceMultipliers.length; i++) {
             // Set price multiplier, if zero, token is no longer Supported
             _tierSets[profileId][tierSetId].supportedCurrencies[supportedCurrencies[i]] = priceMultipliers[i];
-            
-            if(priceMultipliers[i] == 0) {
+
+            if (priceMultipliers[i] == 0) {
                 emit SupportedCurrencyRemoved(profileId, tierSetId, supportedCurrencies[i]);
                 continue;
             }
@@ -203,10 +221,35 @@ contract BBTiers is IBBTiers {
         @return Tier price
         @return Tier deprecated
     */
-    function getTier(uint256 profileId, uint256 tierSetId, uint256 tierId, address currency) external view override tierExists(profileId, tierSetId, tierId) returns (string memory, uint256, bool) {
+    function getTier(
+        uint256 profileId,
+        uint256 tierSetId,
+        uint256 tierId,
+        address currency
+    )
+        external
+        view
+        override
+        tierExists(profileId, tierSetId, tierId)
+        returns (
+            string memory,
+            uint256,
+            bool
+        )
+    {
         // Require ERC20 token is supported by tier set
-        require(_tierSets[profileId][tierSetId].supportedCurrencies[currency] > 0, BBErrorCodesV01.UNSUPPORTED_CURRENCY);
-        return (_tierSets[profileId][tierSetId].cids[tierId], _tierPrice(_tierSets[profileId][tierSetId].prices[tierId], _tierSets[profileId][tierSetId].supportedCurrencies[currency]), _tierSets[profileId][tierSetId].deprecated[tierId]);
+        require(
+            _tierSets[profileId][tierSetId].supportedCurrencies[currency] > 0,
+            BBErrorCodesV01.UNSUPPORTED_CURRENCY
+        );
+        return (
+            _tierSets[profileId][tierSetId].cids[tierId],
+            _tierPrice(
+                _tierSets[profileId][tierSetId].prices[tierId],
+                _tierSets[profileId][tierSetId].supportedCurrencies[currency]
+            ),
+            _tierSets[profileId][tierSetId].deprecated[tierId]
+        );
     }
 
     /*
@@ -231,10 +274,24 @@ contract BBTiers is IBBTiers {
         @return Tier set CIDs
         @return Deprecated tiers
     */
-    function getTierSet(uint256 profileId, uint256 tierSetId) external view override tierSetExists(profileId, tierSetId) returns (uint256[] memory, string[] memory, bool[] memory) {
-        return(_tierSets[profileId][tierSetId].prices, _tierSets[profileId][tierSetId].cids, _tierSets[profileId][tierSetId].deprecated);
+    function getTierSet(uint256 profileId, uint256 tierSetId)
+        external
+        view
+        override
+        tierSetExists(profileId, tierSetId)
+        returns (
+            uint256[] memory,
+            string[] memory,
+            bool[] memory
+        )
+    {
+        return (
+            _tierSets[profileId][tierSetId].prices,
+            _tierSets[profileId][tierSetId].cids,
+            _tierSets[profileId][tierSetId].deprecated
+        );
     }
-    
+
     /*
         @notice Gets the total number of tiers in a tier set
 
@@ -243,7 +300,13 @@ contract BBTiers is IBBTiers {
 
         @return Total tiers in a tier set
     */
-    function totalTiers(uint256 profileId, uint256 tierSetId) external view override tierSetExists(profileId, tierSetId) returns (uint256) {
+    function totalTiers(uint256 profileId, uint256 tierSetId)
+        external
+        view
+        override
+        tierSetExists(profileId, tierSetId)
+        returns (uint256)
+    {
         return _tierSets[profileId][tierSetId].prices.length;
     }
 
@@ -257,7 +320,7 @@ contract BBTiers is IBBTiers {
     function totalTierSets(uint256 profileId) external view override profileExists(profileId) returns (uint256) {
         return _totalTierSets[profileId];
     }
-    
+
     /*
         @notice Get a ERC20 tokens price multiplier within a tier set 
 
@@ -267,9 +330,16 @@ contract BBTiers is IBBTiers {
 
         @return Supported ERC20 token multiplier
     */
-    function getCurrencyMultiplier(uint256 profileId, uint256 tierSetId, address currency) external view override tierSetExists(profileId, tierSetId) returns (uint256) {
+    function getCurrencyMultiplier(
+        uint256 profileId,
+        uint256 tierSetId,
+        address currency
+    ) external view override tierSetExists(profileId, tierSetId) returns (uint256) {
         // Reverts if ERC20 token is not supported
-        require(_tierSets[profileId][tierSetId].supportedCurrencies[currency] > 0, BBErrorCodesV01.UNSUPPORTED_CURRENCY);
+        require(
+            _tierSets[profileId][tierSetId].supportedCurrencies[currency] > 0,
+            BBErrorCodesV01.UNSUPPORTED_CURRENCY
+        );
         return _tierSets[profileId][tierSetId].supportedCurrencies[currency];
     }
 
@@ -282,7 +352,11 @@ contract BBTiers is IBBTiers {
 
         @return True if an ERC20 token is supported for payments within a tier set, otherwise false
     */
-    function isCurrencySupported(uint256 profileId, uint256 tierSetId, address currency) external view override tierSetExists(profileId, tierSetId) returns (bool) {
+    function isCurrencySupported(
+        uint256 profileId,
+        uint256 tierSetId,
+        address currency
+    ) external view override tierSetExists(profileId, tierSetId) returns (bool) {
         return _tierSets[profileId][tierSetId].supportedCurrencies[currency] > 0;
     }
 }

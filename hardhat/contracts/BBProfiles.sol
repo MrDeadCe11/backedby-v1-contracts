@@ -5,19 +5,9 @@ import "./BBErrorsV01.sol";
 import "./interfaces/IBBProfiles.sol";
 
 contract BBProfiles is IBBProfiles {
-    event NewProfile(
-        uint256 profileId,
-        address owner,
-        address receiver,
-        string cid
-    );
+    event NewProfile(uint256 profileId, address owner, address receiver, string cid);
 
-    event EditProfile(
-        uint256 profileId,
-        address owner,
-        address receiver,
-        string cid
-    );
+    event EditProfile(uint256 profileId, address owner, address receiver, string cid);
 
     struct Profile {
         address owner;
@@ -37,9 +27,7 @@ contract BBProfiles is IBBProfiles {
     // Owner => Total profiles owned
     mapping(address => uint256) private _ownersTotalProfiles;
 
-    constructor() {
-
-    }
+    constructor() {}
 
     /*
         @dev Reverts if msg.sender is not profile IDs owner
@@ -57,8 +45,8 @@ contract BBProfiles is IBBProfiles {
         @param Profile ID
     */
     modifier profileExists(uint256 profileId) {
-      require(profileId < _totalProfiles, BBErrorCodesV01.PROFILE_NOT_EXIST);
-      _;
+        require(profileId < _totalProfiles, BBErrorCodesV01.PROFILE_NOT_EXIST);
+        _;
     }
 
     /*
@@ -70,9 +58,13 @@ contract BBProfiles is IBBProfiles {
 
         @return Instantiated profiles ID
     */
-    function createProfile(address owner, address receiver, string calldata cid) external override returns(uint256 profileId) {
+    function createProfile(
+        address owner,
+        address receiver,
+        string calldata cid
+    ) external override returns (uint256 profileId) {
         profileId = _totalProfiles;
-        
+
         // Instantiate profile
         _profiles[profileId] = Profile(owner, receiver, cid);
 
@@ -95,10 +87,17 @@ contract BBProfiles is IBBProfiles {
         @param Profile revenue receiver
         @param Profile CID
     */
-    function editProfile(uint256 profileId, address owner, address receiver, string calldata cid) external override profileExists(profileId) onlyProfileOwner(profileId) {       
+    function editProfile(
+        uint256 profileId,
+        address owner,
+        address receiver,
+        string calldata cid
+    ) external override profileExists(profileId) onlyProfileOwner(profileId) {
         if (msg.sender != owner) {
             // Remove ID from previous owners list of owned profiles
-            _ownedProfiles[msg.sender][_ownedProfilesIndexes[msg.sender][profileId]] = _ownedProfiles[msg.sender][_ownersTotalProfiles[msg.sender] - 1];
+            _ownedProfiles[msg.sender][_ownedProfilesIndexes[msg.sender][profileId]] = _ownedProfiles[msg.sender][
+                _ownersTotalProfiles[msg.sender] - 1
+            ];
             _ownedProfiles[msg.sender][_ownersTotalProfiles[msg.sender] - 1] = 0;
             _ownedProfilesIndexes[msg.sender][profileId] = 0;
             _ownersTotalProfiles[msg.sender]--;
@@ -108,19 +107,19 @@ contract BBProfiles is IBBProfiles {
             _ownedProfilesIndexes[owner][profileId] = _ownersTotalProfiles[owner];
             _ownersTotalProfiles[owner]++;
         }
-        
+
         // Set profile variables
         _profiles[profileId] = Profile(owner, receiver, cid);
 
         emit EditProfile(profileId, owner, _profiles[profileId].receiver, cid);
-    } 
+    }
 
     /*
         @notice Returns the total number of created profiles
 
         @return Total number of profiles
     */
-    function totalProfiles() view external override returns (uint256) {
+    function totalProfiles() external view override returns (uint256) {
         return _totalProfiles;
     }
 
@@ -133,7 +132,17 @@ contract BBProfiles is IBBProfiles {
         @return Profile revenue receiver
         @return Profile CID
     */
-    function getProfile(uint256 profileId) view external override profileExists(profileId) returns (address, address, string memory) {
+    function getProfile(uint256 profileId)
+        external
+        view
+        override
+        profileExists(profileId)
+        returns (
+            address,
+            address,
+            string memory
+        )
+    {
         return (_profiles[profileId].owner, _profiles[profileId].receiver, _profiles[profileId].cid);
     }
 
@@ -147,7 +156,7 @@ contract BBProfiles is IBBProfiles {
     function getOwnersProfiles(address owner) external view override returns (uint256[] memory) {
         uint256[] memory profileIds = new uint256[](_ownersTotalProfiles[owner]);
 
-        for(uint256 i; i < _ownersTotalProfiles[owner]; i++) {
+        for (uint256 i; i < _ownersTotalProfiles[owner]; i++) {
             profileIds[i] = _ownedProfiles[owner][i];
         }
 
@@ -161,7 +170,7 @@ contract BBProfiles is IBBProfiles {
 
         @return Profile count
     */
-    function ownersTotalProfiles(address owner) view external returns (uint256) {
+    function ownersTotalProfiles(address owner) external view returns (uint256) {
         return _ownersTotalProfiles[owner];
     }
 }

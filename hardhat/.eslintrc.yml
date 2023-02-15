@@ -6,6 +6,8 @@ extends:
 parser: "@typescript-eslint/parser"
 parserOptions:
   project: "tsconfig.json"
+  tsconfigRootDir: "./hardhat"
+  sourceType: module
 plugins:
   - "@typescript-eslint"
 root: true

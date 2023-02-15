@@ -6,17 +6,9 @@ import "./interfaces/IBBProfiles.sol";
 import "./interfaces/IBBPosts.sol";
 
 contract BBPosts is IBBPosts {
-    event NewPost(
-        uint256 profileId,
-        uint256 postId,
-        string cid
-    );
+    event NewPost(uint256 profileId, uint256 postId, string cid);
 
-    event EditPost(
-        uint256 profileId,
-        uint256 postId,
-        string cid
-    );
+    event EditPost(uint256 profileId, uint256 postId, string cid);
 
     // Profile ID => Index => Post
     mapping(uint256 => mapping(uint256 => string)) internal _posts;
@@ -35,7 +27,7 @@ contract BBPosts is IBBPosts {
         @param Profile ID
     */
     modifier onlyProfileOwner(uint256 profileId) {
-        (address profileOwner,,) = _bbProfiles.getProfile(profileId);
+        (address profileOwner, , ) = _bbProfiles.getProfile(profileId);
         require(profileOwner == msg.sender, BBErrorCodesV01.NOT_OWNER);
         _;
     }
@@ -59,7 +51,12 @@ contract BBPosts is IBBPosts {
 
         @return Instantiated posts ID
     */
-    function createPost(uint256 profileId, string calldata cid) external override onlyProfileOwner(profileId) returns(uint256 postId){
+    function createPost(uint256 profileId, string calldata cid)
+        external
+        override
+        onlyProfileOwner(profileId)
+        returns (uint256 postId)
+    {
         postId = _profilesTotalPosts[profileId];
 
         _posts[profileId][postId] = cid;
@@ -77,7 +74,11 @@ contract BBPosts is IBBPosts {
         @param Post ID
         @param Post CID
     */
-    function editPost(uint256 profileId, uint postId, string calldata cid) external override onlyProfileOwner(profileId) postExists(profileId, postId) {
+    function editPost(
+        uint256 profileId,
+        uint256 postId,
+        string calldata cid
+    ) external override onlyProfileOwner(profileId) postExists(profileId, postId) {
         _posts[profileId][postId] = cid;
 
         emit EditPost(profileId, postId, cid);
@@ -91,7 +92,13 @@ contract BBPosts is IBBPosts {
 
         @return Post CID
     */
-    function getPost(uint256 profileId, uint256 postId) external view override postExists(profileId, postId) returns (string memory) {
+    function getPost(uint256 profileId, uint256 postId)
+        external
+        view
+        override
+        postExists(profileId, postId)
+        returns (string memory)
+    {
         return (_posts[profileId][postId]);
     }
 
