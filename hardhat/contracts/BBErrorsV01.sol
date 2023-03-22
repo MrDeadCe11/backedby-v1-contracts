@@ -22,4 +22,4 @@ library BBErrorCodesV01 {
     string public constant UNSUPPORTED_CURRENCY = "18";
     string public constant SUBSCRIPTION_PROFILE_ALREADY_EXISTS = "19";
     string public constant INVALID_PRICE = "20";
-}
+}   

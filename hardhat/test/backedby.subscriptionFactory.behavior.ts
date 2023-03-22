@@ -370,7 +370,7 @@ export async function shouldBehaveLikeBackedBySubscriptionFactory() {
           // create owner contract profile
           const newProfile = await bbProfiles.callStatic.createProfile(
             ownerContract.address,
-            signers.user.address,
+            signers.user.address, 
             "testtest",
           );
 

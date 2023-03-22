@@ -90,8 +90,7 @@ contract BBSubscriptions is IBBSubscriptions {
     }
 
     /*
-        @notice Renew subscriptions within a range
-
+        @notice Renew subscriptions within a range  
         @param Array of subscription IDs to renew and refund receiver packed into bytes array
     */
     function performUpkeep(bytes calldata renewalData) external override {

@@ -57,6 +57,7 @@ export async function deployBackedByFixture() {
     _bbSubscriptionsFactory.address,
     _erc20.address,
   )) as BBSubscriptions;
+  await _bbSubscriptions.deployed();
 
   return { _treasury, _erc20, _gasOracle, _bbProfiles, _bbTiers, _bbPosts, _bbSubscriptionsFactory, _bbSubscriptions };
 }
