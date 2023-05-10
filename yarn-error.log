@@ -1,0 +1,27 @@
+Arguments: 
+  /home/someguy/.nvm/versions/node/v18.12.1/bin/node /home/someguy/.yarn/bin/yarn.js add hardhat
+
+PATH: 
+  /home/someguy/.yarn/bin:/home/someguy/.config/yarn/global/node_modules/.bin:/run/user/1000/fnm_multishells/3569_1683746889407/bin:/home/someguy/.fnm:/home/someguy/.nvm/versions/node/v18.12.1/bin:/home/someguy/.cargo/bin:/home/someguy/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/someguy/.foundry/bin:/home/someguy/.foundry/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  18.12.1
+
+Platform: 
+  linux x64
+
+Trace: 
+  Error: getaddrinfo EAI_AGAIN registry.yarnpkg.com
+      at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26)
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

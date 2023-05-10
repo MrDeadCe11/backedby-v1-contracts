@@ -85,7 +85,7 @@
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --ignore-path ./.eslintignore --ext .js,.ts .",
-    "postinstall": "cd ../ husky install && DOTENV_CONFIG_PATH=./.env.example cd hardhat yarn typechain",
+    "postinstall": "husky install && DOTENV_CONFIG_PATH=./.env.example cd hardhat yarn typechain",
     "postpublish": "pinst --enable",
     "prepublishOnly": "pinst --disable",
     "prettier:check": "prettier --check \"**/*.{js,json,md,sol,ts,yml}\"",
