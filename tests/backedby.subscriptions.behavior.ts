@@ -5,12 +5,12 @@ import { BigNumber, Wallet } from "ethers";
 import { ethers } from "hardhat";
 
 import * as subscriptionsInterface from "../artifacts/contracts/BBSubscriptions.sol/BBSubscriptions.json";
-import { BBProfiles } from "./../types/contracts/BBProfiles";
-import { BBSubscriptions } from "./../types/contracts/BBSubscriptions";
-import { BBSubscriptionsFactory } from "./../types/contracts/BBSubscriptionsFactory";
-import { BBTiers } from "./../types/contracts/BBTiers";
-import { DebugERC20 } from "./../types/contracts/utils/DebugERC20";
-import { DebugGasOracle } from "./../types/contracts/utils/DebugGasOracle";
+import { BBProfiles } from "./../typechain-types/contracts/BBProfiles";
+import { BBSubscriptions } from "./../typechain-types/contracts/BBSubscriptions";
+import { BBSubscriptionsFactory } from "./../typechain-types/contracts/BBSubscriptionsFactory";
+import { BBTiers } from "./../typechain-types/contracts/BBTiers";
+import { DebugERC20 } from "./../typechain-types/contracts/utils/DebugERC20";
+import { DebugGasOracle } from "./../typechain-types/contracts/utils/DebugGasOracle";
 import { deployBackedByFixture } from "./backby.fixture";
 import { getDefaultSigners, getTimestamp } from "./utils/utils";
 
